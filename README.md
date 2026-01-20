@@ -1,6 +1,22 @@
 # Cursor Rules Starter Kit
 
-A reusable template for project-specific AI rules in Cursor.
+> *"No, for the 47th time, we use Zustand not Redux. And yes, the API routes are in `/api/v2/`. And NO, we don't use semicolons here."*
+> 
+> — You, mass quitting chats, mass dying inside
+
+---
+
+**The Problem:** Every new chat is a blank slate. Your AI assistant has the memory of a mass GPT lobotomy goldfish. It doesn't know your stack, your patterns, your opinions on tabs vs spaces, or that one cursed legacy folder everyone pretends doesn't exist.
+
+**The Solution:** Cursor Rules. Write it once, never explain it again. Every new chat starts *already knowing* how you do things around here.
+
+This starter kit gives you:
+- 📋 **Ready-to-use rule templates** for components, APIs, LLM integrations, and more
+- 🎯 **Smart glob patterns** so rules only load when relevant
+- 🌳 **Project tree generator** so Cursor always has the lay of the land
+- 🧠 **A framework for growing your rules** as your project evolves
+
+Stop repeating yourself. Start shipping.
 
 ## Quick Start
 
@@ -38,10 +54,17 @@ A reusable template for project-specific AI rules in Cursor.
 your-project/
 └── .cursor/
     └── rules/
+        ├── _template.mdc         # Copy this for new rules
         ├── 01-critical.mdc       # Core rules (always active)
         ├── 02-components.mdc     # Component patterns
         ├── 03-api.mdc            # API/backend patterns
-        └── _template.mdc         # Copy this for new rules
+        ├── 04-llm-integration.mdc # LLM client & streaming
+        ├── 05-prompts.mdc        # Prompt engineering
+        ├── 06-agents.mdc         # Agent & workflow patterns
+        ├── 07-rate-limits.mdc    # Retry & rate limiting
+        ├── 08-ai-security.mdc    # AI security patterns
+        ├── 09-observability.mdc  # Logging & tracing
+        └── 10-testing-ai.mdc     # Testing AI features
 ```
 
 ### File Format (`.mdc`)
@@ -127,14 +150,26 @@ const data = fetch(); // missing await
 
 ## Included Templates
 
+### Core Rules
+
 | File | Purpose | Default Globs |
 |------|---------|---------------|
 | `_template.mdc` | Blank starter | `**/*.ts, **/*.tsx` |
-| `01-critical.mdc` | Core rules | `**/*` (always) |
-| `02-components.mdc` | UI patterns | `**/components/**/*` |
-| `03-api.mdc` | API patterns | `**/api/**/*`, `**/services/**/*` |
+| `01-critical.mdc` | Core rules (style, imports, errors) | `**/*` (always) |
+| `02-components.mdc` | UI component patterns | `**/components/**/*` |
+| `03-api.mdc` | API & service patterns | `**/api/**/*`, `**/services/**/*` |
 
----
+### AI/LLM Rules (for automation & AI-powered apps)
+
+| File | Purpose | Default Globs |
+|------|---------|---------------|
+| `04-llm-integration.mdc` | LLM client setup, streaming, structured outputs | `**/llm/**/*`, `**/ai/**/*` |
+| `05-prompts.mdc` | Prompt engineering, templates, versioning | `**/prompts/**/*` |
+| `06-agents.mdc` | Agent loops, tools, workflows | `**/agents/**/*`, `**/workflows/**/*` |
+| `07-rate-limits.mdc` | Retry logic, rate limiters, queues | `**/lib/**/*`, `**/utils/**/*` |
+| `08-ai-security.mdc` | Prompt injection, sanitization, API keys | `**/*.ts, **/*.tsx` |
+| `09-observability.mdc` | Logging, tracing, cost tracking | `**/lib/**/*`, `**/services/**/*` |
+| `10-testing-ai.mdc` | Mocking LLMs, evals, integration tests | `**/__tests__/**/*`, `**/*.test.ts` |
 
 ---
 
@@ -224,4 +259,3 @@ const MAX_DEPTH = 6;
 - [ ] Script exists at `scripts/generate-tree.js`
 - [ ] `npm run tree` script added to package.json
 - [ ] Run from project root directory
-# Cursor-Rules-Starter-Kit
