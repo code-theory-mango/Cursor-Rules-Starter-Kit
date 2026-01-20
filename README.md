@@ -44,9 +44,25 @@ Stop repeating yourself. Start shipping.
 
 5. **Done!** Cursor automatically loads rules based on file context
 
+> 💡 **Pro tip:** Open **Cursor Settings → Rules** to see all your project rules in one place. They appear automatically—no manual registration needed.
+
 ---
 
 ## How Cursor Rules Work
+
+### Auto-Discovery
+
+Cursor automatically detects all `.mdc` files in your `.cursor/rules/` folder and displays them in **Settings → Rules and Commands → Project Rules**:
+
+![Cursor Settings showing Project Rules](cursor-rules-settings.png)
+
+From here you can:
+
+- See all your project rules and their glob patterns at a glance
+- Click any rule to view/edit its contents
+- See which rules are "Pattern Matched" for the current file
+
+No configuration required—just drop files in the folder and they appear.
 
 ### Folder Structure
 
