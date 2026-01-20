@@ -1,0 +1,30 @@
+---
+globs: ["**/*.ts", "**/*.tsx"]
+---
+
+# Rule Title
+
+Brief description of what this rule covers.
+
+## Guidelines
+
+### Do This
+
+```typescript
+// Good example
+const example = "preferred approach";
+```
+
+### Don't Do This
+
+```typescript
+// Bad example - avoid this
+const bad = "anti-pattern";
+```
+
+## Quick Reference
+
+| Situation | Action |
+|-----------|--------|
+| When X | Do Y |
+| When A | Do B |

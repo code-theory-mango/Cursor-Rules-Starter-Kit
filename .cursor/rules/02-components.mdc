@@ -1,0 +1,72 @@
+---
+globs: ["**/components/**/*.tsx", "**/components/**/*.scss"]
+---
+
+# Component Patterns
+
+## File Structure
+
+```
+component-name/
+├── component-name.tsx          # Main component
+├── component-name.module.scss  # Scoped styles
+└── index.ts                    # Barrel export
+```
+
+## Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Folders | `kebab-case` | `user-profile/` |
+| Components | `PascalCase` | `UserProfile` |
+| Styles | `kebab-case.module.scss` | `user-profile.module.scss` |
+| Props | `PascalCase + Props` | `UserProfileProps` |
+
+## Component Template
+
+```tsx
+"use client"; // Only if needed
+
+import { useState } from 'react';
+import styles from './component-name.module.scss';
+
+interface ComponentNameProps {
+  title: string;
+  onAction?: () => void;
+}
+
+export function ComponentName({ title, onAction }: ComponentNameProps) {
+  const [state, setState] = useState(false);
+
+  return (
+    <div className={styles.container}>
+      <h1>{title}</h1>
+    </div>
+  );
+}
+```
+
+## State Management
+
+```tsx
+// Loading state
+if (loading) {
+  return <LoadingSpinner />;
+}
+
+// Error state
+if (error) {
+  return <ErrorMessage message={error} onRetry={retry} />;
+}
+
+// Empty state
+if (!data?.length) {
+  return <EmptyState message="No items found" />;
+}
+```
+
+## Check Before Creating
+
+1. Check `/components/ui/` for reusable components
+2. Check if similar components exist elsewhere
+3. Reuse and extend, don't duplicate

@@ -1,0 +1,183 @@
+---
+globs: ["**/lib/**/*.ts", "**/services/**/*.ts", "**/agents/**/*.ts"]
+---
+
+# Observability for AI Systems
+
+Logging, monitoring, and debugging patterns for AI/LLM applications.
+
+## Structured Logging
+
+```typescript
+// lib/logger.ts
+import pino from 'pino';
+
+export const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  formatters: {
+    level: (label) => ({ level: label }),
+  },
+});
+
+// Create child loggers for different domains
+export const llmLogger = logger.child({ domain: 'llm' });
+export const agentLogger = logger.child({ domain: 'agent' });
+```
+
+## LLM Request Logging
+
+```typescript
+// Always log LLM interactions for debugging and cost tracking
+interface LLMLogEntry {
+  requestId: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  latencyMs: number;
+  status: 'success' | 'error';
+  error?: string;
+}
+
+async function callLLMWithLogging(params: LLMParams) {
+  const requestId = crypto.randomUUID();
+  const start = Date.now();
+  
+  llmLogger.info({ requestId, model: params.model }, 'LLM request started');
+  
+  try {
+    const response = await anthropic.messages.create(params);
+    
+    llmLogger.info({
+      requestId,
+      model: params.model,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+      latencyMs: Date.now() - start,
+      status: 'success',
+    }, 'LLM request completed');
+    
+    return response;
+  } catch (error) {
+    llmLogger.error({
+      requestId,
+      model: params.model,
+      latencyMs: Date.now() - start,
+      status: 'error',
+      error: error.message,
+    }, 'LLM request failed');
+    
+    throw error;
+  }
+}
+```
+
+## Tracing for Agent Workflows
+
+```typescript
+// lib/tracing.ts
+export class WorkflowTracer {
+  private spans: Array<{
+    name: string;
+    startTime: number;
+    endTime?: number;
+    metadata: Record<string, unknown>;
+    children: string[];
+  }> = [];
+  
+  startSpan(name: string, metadata: Record<string, unknown> = {}) {
+    const spanId = crypto.randomUUID();
+    this.spans.push({
+      name,
+      startTime: Date.now(),
+      metadata,
+      children: [],
+    });
+    return spanId;
+  }
+  
+  endSpan(spanId: string, result?: unknown) {
+    const span = this.spans.find(s => s.id === spanId);
+    if (span) {
+      span.endTime = Date.now();
+      span.metadata.result = result;
+    }
+  }
+  
+  getTrace() {
+    return this.spans;
+  }
+}
+
+// Usage in agent
+const tracer = new WorkflowTracer();
+const spanId = tracer.startSpan('tool_execution', { tool: 'search' });
+const result = await searchTool.execute(params);
+tracer.endSpan(spanId, { resultCount: result.length });
+```
+
+## Cost Tracking
+
+```typescript
+// Track LLM costs in real-time
+const PRICING = {
+  'claude-sonnet-4-20250514': { input: 0.003, output: 0.015 }, // per 1K tokens
+  'claude-3-5-haiku-20241022': { input: 0.0008, output: 0.004 },
+  'gpt-4-turbo': { input: 0.01, output: 0.03 },
+};
+
+function calculateCost(model: string, inputTokens: number, outputTokens: number) {
+  const pricing = PRICING[model];
+  if (!pricing) return null;
+  
+  return (
+    (inputTokens / 1000) * pricing.input +
+    (outputTokens / 1000) * pricing.output
+  );
+}
+
+// Aggregate costs by user/project
+async function trackCost(userId: string, cost: number) {
+  await db.usageCosts.create({
+    userId,
+    cost,
+    timestamp: new Date(),
+  });
+}
+```
+
+## Metrics to Track
+
+| Metric | Purpose | Alert Threshold |
+|--------|---------|-----------------|
+| Request latency | Performance | p99 > 30s |
+| Token usage | Cost control | > 100K/hour |
+| Error rate | Reliability | > 5% |
+| Rate limit hits | Capacity | > 10/min |
+| Agent iterations | Runaway loops | > 10 per request |
+
+## Debug Mode
+
+```typescript
+// Enable verbose logging for development
+const DEBUG = process.env.DEBUG === 'true';
+
+function debugLog(message: string, data?: unknown) {
+  if (DEBUG) {
+    console.log(`[DEBUG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
+}
+
+// Log full prompts in debug mode only
+if (DEBUG) {
+  debugLog('Full prompt', { system: systemPrompt, user: userPrompt });
+}
+```
+
+## Best Practices
+
+- Use request IDs to correlate logs across services
+- Log token usage for every LLM call
+- Implement cost alerts before they become problems
+- Store traces for failed requests longer for debugging
+- Never log sensitive user data or full prompts in production
+- Use sampling for high-volume logging

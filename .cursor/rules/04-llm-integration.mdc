@@ -1,0 +1,90 @@
+---
+globs: ["**/llm/**/*.ts", "**/ai/**/*.ts", "**/agents/**/*.ts", "**/services/**/ai*.ts"]
+---
+
+# LLM Integration Patterns
+
+Patterns for integrating with LLM APIs (OpenAI, Anthropic, etc.)
+
+## Client Setup
+
+```typescript
+// lib/llm/client.ts
+import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+
+// Always use environment variables
+export const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+export const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+```
+
+## Structured Response Pattern
+
+```typescript
+import { z } from 'zod';
+
+// Define expected output schema
+const AnalysisSchema = z.object({
+  sentiment: z.enum(['positive', 'negative', 'neutral']),
+  confidence: z.number().min(0).max(1),
+  summary: z.string(),
+});
+
+type Analysis = z.infer<typeof AnalysisSchema>;
+
+async function analyzeText(text: string): Promise<Analysis> {
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1024,
+    messages: [{ role: 'user', content: text }],
+    system: `Respond with valid JSON matching: ${JSON.stringify(AnalysisSchema.shape)}`,
+  });
+
+  const content = response.content[0];
+  if (content.type !== 'text') throw new Error('Unexpected response type');
+  
+  return AnalysisSchema.parse(JSON.parse(content.text));
+}
+```
+
+## Streaming Responses
+
+```typescript
+// Always stream for user-facing responses
+async function* streamResponse(prompt: string) {
+  const stream = await anthropic.messages.stream({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 2048,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      yield event.delta.text;
+    }
+  }
+}
+```
+
+## Model Selection
+
+| Use Case | Model | Reason |
+|----------|-------|--------|
+| Complex reasoning | `claude-sonnet-4-20250514` | Best quality |
+| Fast responses | `claude-3-5-haiku-20241022` | Low latency |
+| Embeddings | `text-embedding-3-small` | Cost effective |
+| Vision tasks | `claude-sonnet-4-20250514` | Multimodal |
+
+## Best Practices
+
+- Always set `max_tokens` to prevent runaway costs
+- Use streaming for any response shown to users
+- Validate all LLM outputs with Zod schemas
+- Never trust LLM output as safe HTML/SQL/code
+- Log token usage for cost tracking
+- Use system prompts for consistent behavior

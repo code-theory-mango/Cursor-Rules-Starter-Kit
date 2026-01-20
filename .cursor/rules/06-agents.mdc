@@ -1,0 +1,162 @@
+---
+globs: ["**/agents/**/*.ts", "**/workflows/**/*.ts", "**/automation/**/*.ts"]
+---
+
+# Agent & Automation Patterns
+
+Patterns for building AI agents and automation workflows.
+
+## Agent Structure
+
+```
+agents/
+├── base-agent.ts        # Abstract base class
+├── tools/               # Tool definitions
+│   ├── search.ts
+│   ├── calculator.ts
+│   └── index.ts
+├── workflows/           # Multi-step workflows
+│   └── research.ts
+└── types.ts             # Agent-related types
+```
+
+## Tool Definition Pattern
+
+```typescript
+// agents/tools/types.ts
+export interface Tool {
+  name: string;
+  description: string;
+  parameters: z.ZodSchema;
+  execute: (params: unknown) => Promise<unknown>;
+}
+
+// agents/tools/search.ts
+import { z } from 'zod';
+
+export const searchTool: Tool = {
+  name: 'web_search',
+  description: 'Search the web for current information',
+  parameters: z.object({
+    query: z.string().describe('Search query'),
+    limit: z.number().default(5).describe('Max results'),
+  }),
+  execute: async (params) => {
+    const { query, limit } = params as { query: string; limit: number };
+    // Implementation
+    return searchResults;
+  },
+};
+```
+
+## Agent Loop Pattern
+
+```typescript
+// agents/base-agent.ts
+export abstract class BaseAgent {
+  protected tools: Map<string, Tool>;
+  protected maxIterations = 10;
+  
+  async run(input: string): Promise<string> {
+    let iterations = 0;
+    let context = input;
+    
+    while (iterations < this.maxIterations) {
+      const decision = await this.think(context);
+      
+      if (decision.action === 'finish') {
+        return decision.output;
+      }
+      
+      if (decision.action === 'use_tool') {
+        const result = await this.executeTool(
+          decision.tool,
+          decision.params
+        );
+        context = this.updateContext(context, result);
+      }
+      
+      iterations++;
+    }
+    
+    throw new Error('Max iterations reached');
+  }
+  
+  protected abstract think(context: string): Promise<AgentDecision>;
+}
+```
+
+## Workflow Pattern
+
+```typescript
+// workflows/research.ts
+import { z } from 'zod';
+
+const ResearchInput = z.object({
+  topic: z.string(),
+  depth: z.enum(['shallow', 'deep']).default('shallow'),
+});
+
+export async function researchWorkflow(input: z.infer<typeof ResearchInput>) {
+  const steps = [
+    { name: 'gather', fn: gatherSources },
+    { name: 'analyze', fn: analyzeSources },
+    { name: 'synthesize', fn: synthesizeFindings },
+  ];
+  
+  let context = { input, results: {} };
+  
+  for (const step of steps) {
+    logger.info(`Starting step: ${step.name}`);
+    context.results[step.name] = await step.fn(context);
+  }
+  
+  return context.results.synthesize;
+}
+```
+
+## Error Recovery
+
+```typescript
+// Always implement retry with backoff
+async function executeWithRetry<T>(
+  fn: () => Promise<T>,
+  options: { maxRetries: number; backoffMs: number }
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let i = 0; i <= options.maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      if (i < options.maxRetries) {
+        await sleep(options.backoffMs * Math.pow(2, i));
+      }
+    }
+  }
+  
+  throw lastError;
+}
+```
+
+## State Management
+
+```typescript
+// Use explicit state machines for complex workflows
+type WorkflowState = 
+  | { status: 'idle' }
+  | { status: 'running'; step: string; progress: number }
+  | { status: 'paused'; step: string; reason: string }
+  | { status: 'completed'; result: unknown }
+  | { status: 'failed'; error: string };
+```
+
+## Best Practices
+
+- Set hard limits on iterations and tool calls
+- Log every decision and tool execution
+- Implement graceful degradation
+- Store intermediate state for long workflows
+- Use idempotent operations where possible
+- Test agents with deterministic mocks

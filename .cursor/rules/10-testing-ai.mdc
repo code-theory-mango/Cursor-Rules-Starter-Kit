@@ -1,0 +1,188 @@
+---
+globs: ["**/__tests__/**/*.ts", "**/*.test.ts", "**/*.spec.ts"]
+---
+
+# Testing AI/LLM Features
+
+Patterns for testing AI-powered features effectively.
+
+## Mock LLM Responses
+
+```typescript
+// __mocks__/anthropic.ts
+export const mockCreate = jest.fn();
+
+export class Anthropic {
+  messages = {
+    create: mockCreate,
+  };
+}
+
+// In tests
+import { mockCreate } from '../__mocks__/anthropic';
+
+beforeEach(() => {
+  mockCreate.mockReset();
+});
+
+test('handles sentiment analysis', async () => {
+  mockCreate.mockResolvedValue({
+    content: [{ type: 'text', text: '{"sentiment": "positive"}' }],
+    usage: { input_tokens: 10, output_tokens: 5 },
+  });
+  
+  const result = await analyzeSentiment('Great product!');
+  
+  expect(result.sentiment).toBe('positive');
+  expect(mockCreate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      model: expect.any(String),
+      messages: expect.any(Array),
+    })
+  );
+});
+```
+
+## Snapshot Testing for Prompts
+
+```typescript
+// Ensure prompts don't change accidentally
+test('extraction prompt matches snapshot', () => {
+  const prompt = createExtractionPrompt({
+    fields: ['name', 'email'],
+    context: 'User registration form',
+  });
+  
+  expect(prompt).toMatchSnapshot();
+});
+```
+
+## Evaluation Framework
+
+```typescript
+// evals/sentiment.eval.ts
+interface EvalCase {
+  input: string;
+  expected: string;
+  tags?: string[];
+}
+
+const sentimentEvals: EvalCase[] = [
+  { input: 'I love this!', expected: 'positive', tags: ['basic'] },
+  { input: 'This is terrible', expected: 'negative', tags: ['basic'] },
+  { input: 'It works I guess', expected: 'neutral', tags: ['edge'] },
+  { input: '😀👍', expected: 'positive', tags: ['emoji'] },
+];
+
+async function runEvals() {
+  const results = [];
+  
+  for (const testCase of sentimentEvals) {
+    const result = await analyzeSentiment(testCase.input);
+    results.push({
+      ...testCase,
+      actual: result.sentiment,
+      passed: result.sentiment === testCase.expected,
+    });
+  }
+  
+  const passRate = results.filter(r => r.passed).length / results.length;
+  console.log(`Pass rate: ${(passRate * 100).toFixed(1)}%`);
+  
+  return results;
+}
+```
+
+## Testing Agents
+
+```typescript
+// Use dependency injection for tools
+class TestableAgent {
+  constructor(private tools: Map<string, Tool>) {}
+  
+  async run(input: string) {
+    // Agent logic using this.tools
+  }
+}
+
+test('agent uses search tool when asked about current events', async () => {
+  const mockSearch = jest.fn().mockResolvedValue([{ title: 'News' }]);
+  
+  const agent = new TestableAgent(
+    new Map([['search', { execute: mockSearch }]])
+  );
+  
+  await agent.run('What happened today?');
+  
+  expect(mockSearch).toHaveBeenCalled();
+});
+```
+
+## Integration Tests
+
+```typescript
+// Run against real API in CI (sparingly)
+describe.skipIf(!process.env.RUN_INTEGRATION)('LLM Integration', () => {
+  test('basic completion works', async () => {
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-haiku-20241022', // Use cheapest model
+      max_tokens: 10,
+      messages: [{ role: 'user', content: 'Say "test"' }],
+    });
+    
+    expect(response.content[0].text).toContain('test');
+  }, 30000); // Long timeout for API calls
+});
+```
+
+## Testing Output Schemas
+
+```typescript
+// Test that outputs match expected schemas
+import { z } from 'zod';
+
+test('response matches schema', async () => {
+  mockCreate.mockResolvedValue({
+    content: [{ type: 'text', text: '{"items": [], "total": 0}' }],
+  });
+  
+  const response = await fetchWithAI('list items');
+  
+  // Should not throw
+  const parsed = ResponseSchema.parse(response);
+  expect(parsed).toBeDefined();
+});
+
+test('handles malformed response gracefully', async () => {
+  mockCreate.mockResolvedValue({
+    content: [{ type: 'text', text: 'not json' }],
+  });
+  
+  await expect(fetchWithAI('query')).rejects.toThrow(/invalid json/i);
+});
+```
+
+## Test Organization
+
+```
+__tests__/
+├── unit/
+│   ├── prompts.test.ts      # Prompt generation
+│   └── parsers.test.ts      # Output parsing
+├── integration/
+│   └── llm.integration.ts   # Real API tests
+├── evals/
+│   ├── sentiment.eval.ts    # Model evaluations
+│   └── extraction.eval.ts
+└── fixtures/
+    └── mock-responses.ts    # Reusable mock data
+```
+
+## Best Practices
+
+- Mock LLM calls in unit tests - they're slow and non-deterministic
+- Use snapshot tests to catch unintended prompt changes
+- Build eval suites for critical AI features
+- Run integration tests sparingly in CI
+- Test error handling for malformed LLM outputs
+- Version your eval datasets alongside prompts

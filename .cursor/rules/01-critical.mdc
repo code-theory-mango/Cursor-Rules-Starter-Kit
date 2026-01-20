@@ -1,0 +1,54 @@
+---
+globs: ["**/*"]
+---
+
+# Critical Rules
+
+Rules that apply to all files in the project.
+
+## Code Style
+
+1. **Keep it simple** - Optimize for readability and speed
+2. **Don't over-engineer** - Only build what's needed now
+3. **Reuse before creating** - Check for existing utilities first
+
+## Imports
+
+Use consistent import ordering:
+
+```typescript
+// 1. External packages
+import { useState } from 'react';
+import axios from 'axios';
+
+// 2. Internal utilities
+import { formatDate } from '@/utils/date';
+import type { User } from '@/types';
+
+// 3. Components
+import { Button } from '@/components/ui';
+
+// 4. Styles (always last)
+import styles from './component.module.scss';
+```
+
+## Error Handling
+
+Always handle errors gracefully:
+
+```typescript
+try {
+  const data = await fetchData();
+  return data;
+} catch (error) {
+  logger.error('Failed to fetch data', error);
+  throw error;
+}
+```
+
+## Never Do
+
+- Hardcode secrets or API keys
+- Commit `.env` files
+- Use `any` type without justification
+- Leave `console.log` in production code

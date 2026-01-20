@@ -1,0 +1,132 @@
+---
+globs: ["**/prompts/**/*.ts", "**/lib/prompts.ts", "**/constants/prompts.ts"]
+---
+
+# Prompt Engineering Patterns
+
+Guidelines for writing, organizing, and managing prompts.
+
+## Prompt Organization
+
+```
+prompts/
+├── system/           # System prompts by domain
+│   ├── analyst.ts
+│   └── assistant.ts
+├── templates/        # Reusable prompt templates
+│   ├── extraction.ts
+│   └── summarization.ts
+├── index.ts          # Barrel exports
+└── types.ts          # Prompt-related types
+```
+
+## Template Pattern
+
+```typescript
+// prompts/templates/extraction.ts
+export function createExtractionPrompt(options: {
+  fields: string[];
+  context?: string;
+  examples?: Array<{ input: string; output: Record<string, unknown> }>;
+}) {
+  const { fields, context, examples } = options;
+
+  let prompt = `Extract the following fields: ${fields.join(', ')}\n\n`;
+
+  if (context) {
+    prompt += `Context: ${context}\n\n`;
+  }
+
+  if (examples?.length) {
+    prompt += `Examples:\n`;
+    for (const ex of examples) {
+      prompt += `Input: ${ex.input}\nOutput: ${JSON.stringify(ex.output)}\n\n`;
+    }
+  }
+
+  prompt += `Respond with valid JSON only. No explanation.`;
+  
+  return prompt;
+}
+```
+
+## System Prompt Pattern
+
+```typescript
+// prompts/system/analyst.ts
+export const ANALYST_SYSTEM_PROMPT = `You are a data analyst assistant.
+
+## Your Role
+- Analyze data and provide insights
+- Answer questions about datasets
+- Generate SQL queries when asked
+
+## Response Format
+- Be concise and direct
+- Use bullet points for lists
+- Include confidence levels when uncertain
+
+## Constraints
+- Never make up data that wasn't provided
+- Say "I don't know" when uncertain
+- Ask clarifying questions when needed`;
+```
+
+## Prompt Versioning
+
+```typescript
+// prompts/versions.ts
+export const PROMPTS = {
+  summarizer: {
+    v1: 'Summarize the following text...',
+    v2: 'You are a summarization expert...',
+    current: 'v2',
+  },
+} as const;
+
+// Usage - always reference current version
+const prompt = PROMPTS.summarizer[PROMPTS.summarizer.current];
+```
+
+## Variable Injection
+
+```typescript
+// Use template literals with clear markers
+function buildPrompt(vars: { name: string; task: string }) {
+  return `
+Hello {{name}}, please complete the following task:
+
+{{task}}
+
+Respond in JSON format.
+`.replace('{{name}}', vars.name)
+ .replace('{{task}}', vars.task);
+}
+```
+
+## Best Practices
+
+| Do | Don't |
+|----|-------|
+| Store prompts in dedicated files | Hardcode prompts in business logic |
+| Use typed template functions | Use string concatenation |
+| Version prompts for A/B testing | Change prompts without tracking |
+| Include few-shot examples | Assume zero-shot works |
+| Set clear output format | Leave format ambiguous |
+
+## Prompt Testing
+
+```typescript
+// __tests__/prompts/extraction.test.ts
+describe('createExtractionPrompt', () => {
+  it('should include all specified fields', () => {
+    const prompt = createExtractionPrompt({
+      fields: ['name', 'email', 'phone'],
+    });
+    
+    expect(prompt).toContain('name');
+    expect(prompt).toContain('email');
+    expect(prompt).toContain('phone');
+  });
+});
+```

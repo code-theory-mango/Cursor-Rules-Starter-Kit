@@ -1,0 +1,89 @@
+---
+globs: ["**/api/**/*.ts", "**/services/**/*.ts", "**/hooks/api/**/*.ts"]
+---
+
+# API & Service Patterns
+
+## Service Structure
+
+```typescript
+// services/user-service.ts
+import { apiClient } from '@/utils/api-client';
+import type { User, CreateUserDto } from '@/types';
+
+export const UserService = {
+  async getAll(): Promise<User[]> {
+    const { data } = await apiClient.get('/users');
+    return data;
+  },
+
+  async getById(id: string): Promise<User> {
+    const { data } = await apiClient.get(`/users/${id}`);
+    return data;
+  },
+
+  async create(dto: CreateUserDto): Promise<User> {
+    const { data } = await apiClient.post('/users', dto);
+    return data;
+  },
+
+  async update(id: string, dto: Partial<User>): Promise<User> {
+    const { data } = await apiClient.patch(`/users/${id}`, dto);
+    return data;
+  },
+
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/users/${id}`);
+  },
+};
+```
+
+## Error Handling
+
+```typescript
+try {
+  const data = await UserService.getById(id);
+  return { data, error: null };
+} catch (error) {
+  logger.error('Failed to fetch user', { id, error });
+  return { data: null, error: 'Failed to load user' };
+}
+```
+
+## API Response Types
+
+```typescript
+// Standard response wrapper
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+// Paginated response
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+```
+
+## Authentication
+
+```typescript
+// Always include auth headers
+const headers = {
+  Authorization: `Bearer ${token}`,
+  'Content-Type': 'application/json',
+};
+```
+
+## Best Practices
+
+- Never expose API keys in client code
+- Use environment variables for URLs
+- Handle loading, success, and error states
+- Log errors with context for debugging
+- Use TypeScript for request/response types
