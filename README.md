@@ -69,8 +69,10 @@ No configuration required—just drop files in the folder and they appear.
 ```
 your-project/
 └── .cursor/
+    ├── project.yaml              # 🆕 Project-specific variables
     └── rules/
         ├── _template.mdc         # Copy this for new rules
+        ├── 00-project-context.mdc # 🆕 Loads project.yaml context
         ├── 01-critical.mdc       # Core rules (always active)
         ├── 02-components.mdc     # Component patterns
         ├── 03-api.mdc            # API/backend patterns
@@ -80,7 +82,9 @@ your-project/
         ├── 07-rate-limits.mdc    # Retry & rate limiting
         ├── 08-ai-security.mdc    # AI security patterns
         ├── 09-observability.mdc  # Logging & tracing
-        └── 10-testing-ai.mdc     # Testing AI features
+        ├── 10-testing-ai.mdc     # Testing AI features
+        ├── 11-ralph-loops.mdc    # Autonomous agent loops
+        └── 12-session-handoff.mdc # 🆕 Session health & handoffs
 ```
 
 ### File Format (`.mdc`)
@@ -96,6 +100,117 @@ globs: ["**/*.ts", "**/*.tsx"]    ← When to load this rule
 
 Your rules and examples here...
 ```
+
+---
+
+## Project Context System
+
+> "Edit one file, and every rule knows your stack."
+
+The **project context system** lets you define project-specific variables that all rules can reference. Instead of editing every rule for each project, you edit one file.
+
+### Setup
+
+1. Edit `.cursor/project.yaml` with your project details:
+
+```yaml
+project:
+  name: "My E-commerce App"
+  type: "web-app"
+
+stack:
+  framework: "Next.js"
+  styling: "Tailwind"
+  database: "PostgreSQL"
+  orm: "Prisma"
+
+conventions:
+  components: "PascalCase"
+  state_management: "zustand"
+
+preferences:
+  test_framework: "vitest"
+  commit_style: "conventional"
+```
+
+2. The `00-project-context.mdc` rule automatically loads this at session start.
+
+### What You Can Configure
+
+| Section | Purpose | Example Values |
+|---------|---------|----------------|
+| `project` | Identity & type | name, description, web-app/api/cli |
+| `stack` | Tech stack | framework, styling, database, ORM |
+| `directories` | Folder structure | src, components, api paths |
+| `conventions` | Code style | naming, quotes, indentation |
+| `ai` | LLM settings | provider, models, patterns |
+| `preferences` | Team preferences | testing, git, docs |
+| `notes` | Free-form context | Custom instructions |
+
+### How It Works
+
+When the AI starts a session, it reads `project.yaml` and adapts:
+
+- **Creating components?** → Uses your naming convention and styling system
+- **Writing tests?** → Uses your test framework (vitest/jest)
+- **Making commits?** → Follows your commit style (conventional/gitmoji)
+- **Placing files?** → Uses your directory structure
+
+The rules stay generic—the context makes them specific.
+
+---
+
+## Session Health & Handoff
+
+> "Know when to start fresh, and pick up exactly where you left off."
+
+Long chat sessions degrade in quality. The **session handoff system** helps you:
+
+1. **Recognize** when a fresh chat would help
+2. **Generate** a handoff command to continue seamlessly
+
+### Warning Signs
+
+The AI will suggest a new chat when it detects:
+
+| Signal | What It Looks Like |
+|--------|-------------------|
+| 🔴 Error loops | Same error 3+ times despite fixes |
+| 🔴 Context confusion | Mixing up files, forgetting decisions |
+| 🔴 Conflicting changes | Undoing previous edits |
+| 🟡 Scope creep | Task expanded way beyond original |
+| 🟡 Long conversation | 20+ exchanges |
+
+### Handoff Command
+
+When starting fresh, the AI generates a handoff block:
+
+```markdown
+## 🔄 Session Handoff
+
+### Completed
+- [x] Set up authentication
+- [x] Created login page
+
+### Next Steps
+1. Create profile API endpoint
+2. Connect profile component
+
+### Resume Command
+Continue auth implementation. Done: login/signup. 
+Next: profile API at `/api/user/profile`.
+Key files: `user-profile.tsx`, `middleware.ts`
+```
+
+Copy this into your new chat to continue without losing context.
+
+### Trigger Phrases
+
+Say any of these to get a handoff:
+- "Let's continue in a new chat"
+- "Generate a handoff"
+- "Create a checkpoint"
+- "Summarize for next session"
 
 ---
 
@@ -171,6 +286,7 @@ const data = fetch(); // missing await
 | File | Purpose | Default Globs |
 |------|---------|---------------|
 | `_template.mdc` | Blank starter | `**/*.ts, **/*.tsx` |
+| `00-project-context.mdc` | **Loads project.yaml context** | `**/*` (always) |
 | `01-critical.mdc` | Core rules (style, imports, errors) | `**/*` (always) |
 | `02-components.mdc` | UI component patterns | `**/components/**/*` |
 | `03-api.mdc` | API & service patterns | `**/api/**/*`, `**/services/**/*` |
@@ -186,6 +302,13 @@ const data = fetch(); // missing await
 | `08-ai-security.mdc` | Prompt injection, sanitization, API keys | `**/*.ts, **/*.tsx` |
 | `09-observability.mdc` | Logging, tracing, cost tracking | `**/lib/**/*`, `**/services/**/*` |
 | `10-testing-ai.mdc` | Mocking LLMs, evals, integration tests | `**/__tests__/**/*`, `**/*.test.ts` |
+
+### Workflow Rules
+
+| File | Purpose | Default Globs |
+|------|---------|---------------|
+| `11-ralph-loops.mdc` | Autonomous agent loops for mass refactors | `**/*` (always) |
+| `12-session-handoff.mdc` | **Session health monitoring & handoffs** | `**/*` (always) |
 
 ---
 

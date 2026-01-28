@@ -1,0 +1,236 @@
+---
+globs: ["**/*"]
+---
+
+# Ralph Loop Pattern
+
+Autonomous agent loops with fresh context and external verification. Named after Ralph Wiggum - persistently wrong but never giving up.
+
+## AI Trigger Conditions
+
+**Suggest Ralph when the user's request matches these patterns:**
+
+| Signal | Example Request | Action |
+|--------|-----------------|--------|
+| Large file count | "Update all 50+ components to use new API" | Suggest Ralph |
+| Mass rename/replace | "Rename UserContext to AuthContext everywhere" | Suggest Ralph |
+| Library migration | "Migrate from moment.js to date-fns" | Suggest Ralph |
+| Pattern is mechanical | "Add error boundaries to all page components" | Suggest Ralph |
+| Codebase-wide change | "Replace all console.log with logger" | Suggest Ralph |
+
+**Do NOT suggest Ralph for:**
+
+| Signal | Example Request | Action |
+|--------|-----------------|--------|
+| Single file/feature | "Build a new dashboard page" | Use normal workflow |
+| Requires judgment | "Improve the auth system" | Use normal workflow |
+| Exploratory | "Why is this slow?" | Use normal workflow |
+| Small scope | "Fix this button" | Use normal workflow |
+| Creative work | "Design a better UX" | Use normal workflow |
+
+## Detection Heuristics
+
+Before suggesting Ralph, check:
+
+1. **File count**: Run `grep -r "PATTERN" src/ | wc -l` - if 20+ matches, Ralph may help
+2. **Pattern clarity**: Can you define exact before/after code? If not, don't use Ralph
+3. **Verification exists**: Is there a grep/tsc/test command that proves completion?
+4. **Mechanical nature**: Could a junior dev do this with find-and-replace? If yes, use Ralph
+
+## Daily Use Guidance
+
+Ralph is a **specialized tool for ~5% of tasks**, not a daily workflow.
+
+- **Normal Cursor sessions**: Feature work, debugging, architecture, exploration
+- **Ralph loops**: Mass migrations, codebase-wide refactors with clear patterns
+
+The upfront planning overhead only pays off at scale (20+ files, same mechanical change).
+
+---
+
+## Core Principles
+
+1. **LLMs grade their own homework poorly** - Never trust "I'm done"
+2. **Context windows degrade** - Fresh context per iteration beats accumulated context
+3. **Code is memory** - Progress persists in git, not in tokens
+4. **External verification decides** - grep, tsc, tests determine completion
+
+## Two-Phase Approach
+
+### Phase 1: Plan Mode (Smart Model)
+
+Use Plan Mode to create atomic, mechanical tasks:
+
+```
+/mode plan
+
+I need to migrate all files using OldHook to use NewHook instead.
+
+Please:
+1. Analyze the codebase to find all affected files
+2. Define the EXACT transformation pattern (show before/after code)
+3. Create a grep command that returns 0 when migration is complete
+4. Write a prompt template for migrating one file at a time
+5. Create a bash script that loops until done
+```
+
+### Phase 2: CLI Execution (Fresh Context Loop)
+
+Each iteration starts fresh but builds on persistent code:
+
+```bash
+#!/bin/bash
+# ralph_migrate.sh
+
+source .env
+export PATH="$HOME/.local/bin:$PATH"
+
+MAX_ITERATIONS=50
+ITERATION=0
+
+PROMPT='Migrate ONE file from OldHook to NewHook.
+Find a file: grep -r "import OldHook from" src/ -l | head -1
+
+Transformation:
+- OLD: import OldHook from "old-path"
+- NEW: import { newHook } from "new-path"
+
+Instructions:
+1. Find ONE file still using OldHook
+2. Read it to understand context
+3. Apply the transformation
+4. Stop after ONE file'
+
+while [ $ITERATION -lt $MAX_ITERATIONS ]; do
+  REMAINING=$(grep -r "import OldHook from" src/ 2>/dev/null | wc -l)
+  
+  if [ "$REMAINING" -eq 0 ]; then
+    echo "Zero imports remaining, checking types..."
+    if npx tsc --noEmit; then
+      echo "SUCCESS: Migration complete!"
+      exit 0
+    fi
+  fi
+  
+  echo "=== Iteration $ITERATION: $REMAINING files remaining ==="
+  agent -p --model grok "$PROMPT"
+  
+  ITERATION=$((ITERATION + 1))
+done
+
+echo "Reached max iterations"
+```
+
+## External Verification Patterns
+
+### Do This
+
+```bash
+# GOOD: Trust external verification
+REMAINING=$(grep -r "OLD_PATTERN" src/ | wc -l)
+if [ $REMAINING -eq 0 ] && npx tsc --noEmit; then
+  exit 0  # Only grep + compiler decide when done
+fi
+```
+
+### Don't Do This
+
+```bash
+# BAD: Trust the LLM
+if agent_says_done; then exit; fi
+```
+
+## Verification Commands
+
+| Task Type | Verification Command |
+|-----------|---------------------|
+| Pattern removal | `grep -r "pattern" src/ \| wc -l` → 0 |
+| TypeScript migration | `npx tsc --noEmit` → exit 0 |
+| Test coverage | `npm test` → all pass |
+| Build validation | `npm run build` → success |
+| Lint compliance | `npm run lint` → no errors |
+
+## Task Atomicity
+
+### Good Task (Mechanical)
+
+```markdown
+Replace `import OldAuth from 'old-auth'` with `import { newAuth } from 'new-auth'`
+Verification: `grep -r "import OldAuth" src/ | wc -l == 0`
+```
+
+### Bad Task (Requires Judgment)
+
+```markdown
+Refactor the authentication system
+```
+
+## When to Use Ralph
+
+**Good for:**
+- Large refactors with clear patterns (50+ files)
+- Library/framework migrations
+- Adding types across codebase
+- Renaming symbols project-wide
+- Any task with objective pass/fail criteria
+
+**Not for:**
+- Creative/design decisions
+- Architectural choices
+- Security-sensitive code
+- Tasks without clear "done" criteria
+
+## Script Template
+
+```bash
+#!/bin/bash
+# Generic Ralph loop template
+
+set -e
+source .env 2>/dev/null || true
+
+MAX_ITERATIONS=${MAX_ITERATIONS:-50}
+ITERATION=0
+
+# Define your verification
+verify_done() {
+  # Return 0 if complete, 1 if more work needed
+  local remaining=$(grep -r "TARGET_PATTERN" src/ 2>/dev/null | wc -l)
+  [ "$remaining" -eq 0 ] && npx tsc --noEmit
+}
+
+# Define your prompt
+PROMPT='Your atomic task description here.
+One file at a time. Stop after ONE change.'
+
+while [ $ITERATION -lt $MAX_ITERATIONS ]; do
+  if verify_done; then
+    echo "✓ Complete after $ITERATION iterations"
+    exit 0
+  fi
+  
+  echo "=== Iteration $ITERATION ==="
+  agent -p "$PROMPT"
+  
+  ITERATION=$((ITERATION + 1))
+done
+
+echo "✗ Max iterations reached"
+exit 1
+```
+
+## Integration with Cursor
+
+1. **Plan in IDE**: Use Plan Mode to design the transformation
+2. **Generate script**: Ask Cursor to create the Ralph loop script
+3. **Run externally**: Execute the script in terminal
+4. **Fresh agents**: Each `agent` call gets clean context
+
+## Best Practices
+
+- Always set `MAX_ITERATIONS` safety limit
+- Log iteration count and remaining work
+- Use `--model` flag for cost control
+- Commit after successful verification
+- Keep prompts focused on ONE atomic change
+- Include explicit before/after patterns in prompts

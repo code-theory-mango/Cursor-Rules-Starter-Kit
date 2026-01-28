@@ -1,0 +1,108 @@
+# Project Context
+# This file provides project-specific variables that get loaded into every AI session.
+# Edit this file to customize how rules apply to YOUR project.
+
+# ============================================================================
+# PROJECT IDENTITY
+# ============================================================================
+project:
+  name: "My Project"                    # Your project name
+  description: "A brief description"    # One-line description
+  type: "web-app"                       # web-app | api | cli | library | monorepo
+
+# ============================================================================
+# TECH STACK
+# ============================================================================
+stack:
+  language: "TypeScript"                # Primary language
+  runtime: "Node.js"                    # Node.js | Bun | Deno | Browser
+  framework: "Next.js"                  # Next.js | React | Express | Fastify | etc.
+  styling: "Tailwind"                   # Tailwind | SCSS | CSS Modules | styled-components
+  database: "PostgreSQL"                # PostgreSQL | MySQL | MongoDB | SQLite | none
+  orm: "Prisma"                         # Prisma | Drizzle | TypeORM | Sequelize | none
+
+# ============================================================================
+# DIRECTORY STRUCTURE
+# ============================================================================
+directories:
+  source: "src"                         # Main source directory
+  components: "src/components"          # UI components
+  pages: "src/app"                      # Pages/routes (app | pages for Next.js)
+  api: "src/app/api"                    # API routes
+  lib: "src/lib"                        # Shared utilities
+  types: "src/types"                    # TypeScript types
+  tests: "__tests__"                    # Test files
+  styles: "src/styles"                  # Global styles
+
+# ============================================================================
+# CONVENTIONS
+# ============================================================================
+conventions:
+  # Naming
+  components: "PascalCase"              # PascalCase | kebab-case
+  files: "kebab-case"                   # kebab-case | camelCase | PascalCase
+  css_classes: "kebab-case"             # kebab-case | camelCase | BEM
+  
+  # Code style
+  semicolons: true                      # true | false
+  quotes: "single"                      # single | double
+  indent: 2                             # 2 | 4
+  
+  # Patterns
+  state_management: "zustand"           # zustand | redux | jotai | context | none
+  data_fetching: "tanstack-query"       # tanstack-query | swr | fetch | axios
+  forms: "react-hook-form"              # react-hook-form | formik | native
+  validation: "zod"                     # zod | yup | joi | none
+
+# ============================================================================
+# AI/LLM INTEGRATION (if applicable)
+# ============================================================================
+ai:
+  enabled: false                        # Set to true if project uses AI features
+  provider: "openai"                    # openai | anthropic | google | azure
+  models:
+    default: "gpt-4o"                   # Default model for general use
+    fast: "gpt-4o-mini"                 # Fast model for simple tasks
+  patterns:
+    streaming: true                     # Use streaming responses
+    structured_output: true             # Use JSON mode / structured output
+
+# ============================================================================
+# IMPORTANT FILES
+# ============================================================================
+key_files:
+  env_example: ".env.example"           # Environment template
+  schema: "prisma/schema.prisma"        # Database schema
+  types: "src/types/index.ts"           # Main types file
+  constants: "src/lib/constants.ts"     # App constants
+
+# ============================================================================
+# TEAM PREFERENCES
+# ============================================================================
+preferences:
+  # Error handling
+  error_boundary: true                  # Wrap components in error boundaries
+  logger: "console"                     # console | winston | pino | custom
+  
+  # Testing
+  test_framework: "vitest"              # vitest | jest | none
+  test_style: "integration"             # unit | integration | e2e | all
+  
+  # Git
+  commit_style: "conventional"          # conventional | simple | gitmoji
+  branch_prefix: "feature"              # feature | feat | none
+  
+  # Documentation
+  jsdoc: false                          # Add JSDoc comments
+  readme_updates: true                  # Keep README updated
+
+# ============================================================================
+# CUSTOM CONTEXT (add any project-specific notes)
+# ============================================================================
+notes: |
+  Add any project-specific context here that the AI should know about.
+  
+  Examples:
+  - "We use a custom auth system in src/lib/auth.ts"
+  - "API responses follow the format { data, error, meta }"
+  - "Don't modify files in src/legacy - they're being deprecated"

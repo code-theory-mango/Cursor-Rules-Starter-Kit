@@ -1,0 +1,72 @@
+---
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Project Context Loader
+
+**At the start of every session, read `.cursor/project.yaml` to understand this project's specific configuration.**
+
+## Required Action
+
+Before making any code changes, load the project context:
+
+```
+Read: .cursor/project.yaml
+```
+
+This file contains:
+- Project identity and type
+- Tech stack details
+- Directory structure
+- Naming conventions
+- Team preferences
+- Custom notes and context
+
+## How to Use Project Context
+
+When the project.yaml is loaded, adapt your behavior:
+
+| Context Field | How It Affects Responses |
+|---------------|-------------------------|
+| `stack.framework` | Use framework-specific patterns and APIs |
+| `stack.styling` | Generate styles in the specified format |
+| `conventions.components` | Name components in the specified case |
+| `conventions.state_management` | Use the specified state solution |
+| `directories.*` | Place files in the correct locations |
+| `preferences.test_framework` | Write tests for the specified framework |
+| `preferences.commit_style` | Format commit messages accordingly |
+| `notes` | Follow any custom project guidance |
+
+## Example Usage
+
+When asked to create a component, check project.yaml and apply:
+
+```typescript
+// If conventions.components = "PascalCase" and stack.styling = "Tailwind"
+// Create: src/components/UserProfile.tsx with Tailwind classes
+
+// If conventions.components = "kebab-case" and stack.styling = "SCSS"  
+// Create: src/components/user-profile/user-profile.tsx with .module.scss
+```
+
+## When project.yaml is Missing
+
+If `.cursor/project.yaml` doesn't exist, ask:
+
+> "I don't see a project context file. Would you like me to create `.cursor/project.yaml` with your project's configuration? This helps me give more accurate, project-specific responses."
+
+Then gather:
+1. What framework/stack are you using?
+2. What are your naming conventions?
+3. Any specific patterns I should follow?
+
+## Quick Reference
+
+| Project Type | Key Considerations |
+|--------------|-------------------|
+| `web-app` | SSR/CSR, routing, state management |
+| `api` | REST/GraphQL, validation, auth middleware |
+| `cli` | Args parsing, stdout/stderr, exit codes |
+| `library` | Exports, bundling, peer dependencies |
+| `monorepo` | Workspace structure, shared packages |

@@ -1,0 +1,184 @@
+---
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Session Health & Handoff
+
+Monitor session health and provide smooth transitions to fresh chats when needed.
+
+## Session Health Indicators
+
+**Watch for these signals that suggest starting a fresh chat:**
+
+| Signal | Threshold | Severity |
+|--------|-----------|----------|
+| Repeated same errors | 3+ identical failures | 🔴 High |
+| Conflicting changes | Undoing previous edits | 🔴 High |
+| Context confusion | Mixing up file names/locations | 🔴 High |
+| Scope creep | Task expanded significantly from original | 🟡 Medium |
+| Long conversation | 20+ back-and-forth exchanges | 🟡 Medium |
+| Multiple unrelated tasks | Jumping between 3+ different features | 🟡 Medium |
+| Circular discussions | Revisiting decided topics | 🟡 Medium |
+
+## When to Suggest Fresh Start
+
+**Proactively suggest a new chat when:**
+
+1. **Error loops**: Same error persists after 3 genuine fix attempts
+2. **Context degradation**: You notice confusion about what was already done
+3. **Task drift**: The current task has evolved far from the original request
+4. **Checkpoint reached**: A major milestone is complete, new phase beginning
+
+**Suggest it like this:**
+
+> "We've made good progress on [summary]. I'm noticing [signal]. 
+> A fresh chat would give us clean context for the next phase.
+> 
+> Here's a handoff command to continue:"
+
+## Handoff Command Format
+
+When suggesting a new chat, generate this handoff block:
+
+```markdown
+---
+## 🔄 Session Handoff
+
+### Completed
+- [x] What was accomplished
+- [x] Key decisions made
+
+### In Progress  
+- [ ] Current task state
+- [ ] What's partially done
+
+### Files Modified
+- `path/to/file.ts` - what changed
+- `path/to/other.ts` - what changed
+
+### Next Steps
+1. Immediate next action
+2. Following action
+
+### Context
+- Key decision: [why we chose X over Y]
+- Blocked by: [any blockers]
+- Note: [anything the next session needs to know]
+
+### Resume Command
+```
+Continue working on [feature/task]. 
+
+We already:
+- [completed item 1]
+- [completed item 2]
+
+Next: [specific next action]
+
+Key files: `file1.ts`, `file2.ts`
+```
+---
+```
+
+## Automatic Handoff Triggers
+
+**Generate handoff automatically when user says:**
+- "Let's continue this in a new chat"
+- "I'm going to start fresh"
+- "Generate a handoff"
+- "Summarize for next session"
+- "Create a checkpoint"
+
+**Also offer handoff when:**
+- Completing a major feature/milestone
+- Before switching to unrelated work
+- When you detect context confusion
+
+## Handoff Best Practices
+
+### Include
+- Specific file paths modified
+- Concrete next steps (not vague)
+- Key decisions and WHY
+- Any gotchas or warnings
+
+### Don't Include
+- Full code dumps (they're in git)
+- Speculation about future work
+- Resolved issues
+- Internal thought process
+
+## Quick Handoff Template
+
+For rapid handoffs when time is short:
+
+```markdown
+**Quick Handoff**: Working on [task]. Done: [1-2 items]. Next: [specific action]. Key files: `file.ts`. Note: [one critical context].
+```
+
+## Session Metrics to Track
+
+Mentally track these during the session:
+
+| Metric | Healthy | Concerning |
+|--------|---------|------------|
+| Edit success rate | 80%+ edits work first try | 50%+ need revision |
+| Task focus | 1-2 related tasks | 4+ unrelated tasks |
+| File churn | Files edited once | Same file edited 5+ times |
+| User corrections | Occasional | Frequent "no, I meant..." |
+
+## Integration with Todos
+
+If using TodoWrite, include todo state in handoff:
+
+```markdown
+### Todo State
+- [x] completed-task-id: Description
+- [ ] pending-task-id: Description  
+- [~] in-progress-task-id: Description (partial: what's done)
+```
+
+## Example Full Handoff
+
+```markdown
+---
+## 🔄 Session Handoff
+
+### Completed
+- [x] Set up authentication with NextAuth.js
+- [x] Created login/signup pages
+- [x] Added protected route middleware
+
+### In Progress  
+- [ ] User profile page (component created, needs API integration)
+
+### Files Modified
+- `src/app/api/auth/[...nextauth]/route.ts` - Auth config
+- `src/app/(auth)/login/page.tsx` - Login form
+- `src/app/(auth)/signup/page.tsx` - Signup form
+- `src/middleware.ts` - Route protection
+- `src/components/user-profile.tsx` - Started, incomplete
+
+### Next Steps
+1. Create `/api/user/profile` endpoint
+2. Connect UserProfile component to API
+3. Add profile edit functionality
+
+### Context
+- Using Credentials provider (not OAuth) per user preference
+- Session strategy is JWT, not database
+- Profile component needs `useSession` hook integration
+
+### Resume Command
+```
+Continue the auth implementation. 
+
+Done: NextAuth setup, login/signup pages, middleware.
+Next: Create the profile API endpoint at `/api/user/profile` 
+and connect it to the UserProfile component.
+
+Key files: `src/components/user-profile.tsx`, `src/app/api/`
+```
+---
+```
