@@ -1,8 +1,6 @@
 # Cursor Rules Starter Kit
 
-> *"No, for the 47th time, we use Zustand not Redux. And yes, the API routes are in `/api/v2/`. And NO, we don't use semicolons here."*
-> 
-> — You, mass quitting chats, mass dying inside
+> *"Explaining your codebase to AI is like Groundhog Day, except Bill Murray had it easier."*
 
 ---
 
@@ -20,31 +18,60 @@ Stop repeating yourself. Start shipping.
 
 ## Quick Start
 
-1. **Copy to your project:**
+### Option 1: Clone & Copy (Recommended)
+
+```bash
+# Clone the repo
+git clone https://github.com/user/cursor-rules.git /tmp/cursor-rules
+
+# Copy to your project
+cd /path/to/your/project
+cp -r /tmp/cursor-rules/.cursor .
+mkdir -p scripts && cp /tmp/cursor-rules/scripts/generate-tree.js scripts/
+
+# Clean up
+rm -rf /tmp/cursor-rules
+```
+
+### Option 2: Direct Download (if on GitHub)
+
+```bash
+cd /path/to/your/project
+
+# Download and extract just the .cursor folder
+curl -L https://github.com/user/cursor-rules/archive/main.tar.gz \
+  | tar -xz --strip-components=1 "cursor-rules-main/.cursor"
+```
+
+### Option 3: Manual Copy
+
+```bash
+# If you have the repo locally somewhere
+cp -r /path/to/cursor-rules/.cursor /path/to/your/project/
+```
+
+### After Installation
+
+1. **Configure your project context:**
    ```bash
-   cp -r ~/Desktop/cursor-rules/.cursor /path/to/your/project/
-   cp ~/Desktop/cursor-rules/scripts/generate-tree.js /path/to/your/project/scripts/
+   # Edit with your project's details
+   nano .cursor/project.yaml
    ```
 
-2. **Add the npm script** to your `package.json`:
-   ```json
-   {
-     "scripts": {
-       "tree": "node scripts/generate-tree.js"
-     }
-   }
-   ```
-
-3. **Generate the project tree:**
+2. **Generate the project tree** (optional but recommended):
    ```bash
+   # Add to package.json scripts: "tree": "node scripts/generate-tree.js"
    npm run tree
    ```
 
-4. **Customize the rules** in `.cursor/rules/` for your project
+3. **Verify installation:**
+   - Open your project in Cursor
+   - Go to **Settings → Rules**
+   - You should see all rules listed under "Project Rules"
 
-5. **Done!** Cursor automatically loads rules based on file context
+4. **Customize rules** in `.cursor/rules/` for your specific needs
 
-> 💡 **Pro tip:** Open **Cursor Settings → Rules** to see all your project rules in one place. They appear automatically—no manual registration needed.
+> 💡 **Pro tip:** Rules load automatically based on glob patterns—no manual registration needed.
 
 ---
 
@@ -255,17 +282,57 @@ Say any of these to get a handoff:
 
 ---
 
-## Glob Patterns
+## Glob Patterns & Context Efficiency
 
-The `globs` array controls **when** rules are loaded:
+> ⚠️ **Important: NOT every rule loads on every prompt.**
 
-| Pattern | When It Applies |
-|---------|-----------------|
-| `["**/*"]` | All files (always active) |
-| `["**/*.ts", "**/*.tsx"]` | TypeScript files |
-| `["**/*.scss", "**/*.css"]` | Style files |
-| `["**/components/**/*"]` | Only in components folder |
-| `["**/api/**/*.ts"]` | Only API route files |
+Rules only load when you're working with files that match their glob pattern. This is intentional — AI context is limited, so only relevant rules should be active.
+
+### How Rules Load
+
+| Glob Pattern | When It Loads | Context Cost |
+|--------------|---------------|--------------|
+| `["**/*"]` or `alwaysApply: true` | **Every prompt** | Always uses context |
+| `["**/components/**/*"]` | Only with component files | Zero cost otherwise |
+| `["**/api/**/*.ts"]` | Only with API files | Zero cost otherwise |
+
+### This Repo's Rules
+
+**Always Active (4 rules):**
+
+| Rule | Why Always Active |
+|------|-------------------|
+| `00-project-context.mdc` | Loads project config, suggests other rules |
+| `01-critical.mdc` | Core code style applies everywhere |
+| `11-ralph-loops.mdc` | Needs to detect large refactor requests |
+| `12-session-handoff.mdc` | Monitors session health |
+
+**Conditionally Active (8 rules):**
+
+| Rule | Only Loads For |
+|------|----------------|
+| `02-components.mdc` | Component files (`**/components/**/*`) |
+| `03-api.mdc` | API/service files |
+| `04-llm-integration.mdc` | LLM/AI code directories |
+| `05-prompts.mdc` | Prompt files |
+| `06-agents.mdc` | Agent/workflow code |
+| `07-rate-limits.mdc` | Lib/utils/services |
+| `08-ai-security.mdc` | TypeScript files |
+| `09-observability.mdc` | Lib/services |
+| `10-testing-ai.mdc` | Test files |
+
+### Why This Matters
+
+```
+❌ Bad: 12 rules × 200 tokens each = 2,400 tokens on EVERY prompt
+✅ Good: 4 always + 2 relevant = ~1,200 tokens (50% savings)
+```
+
+Fewer tokens = more room for your code and conversation.
+
+### Check Active Rules
+
+Open **Cursor Settings → Rules** to see which rules are "Pattern Matched" for your current file.
 
 ### Pattern Syntax
 
