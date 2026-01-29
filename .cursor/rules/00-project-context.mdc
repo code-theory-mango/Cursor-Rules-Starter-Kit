@@ -3,13 +3,71 @@ globs: ["**/*"]
 alwaysApply: true
 ---
 
-# Project Context Loader
+# Project Context & Rule Suggestions
 
 **At the start of every session, read `.cursor/project.yaml` to understand this project's specific configuration.**
 
-## Required Action
+---
 
-Before making any code changes, load the project context:
+## IMPORTANT: Suggest Relevant Rules
+
+**When the user's request matches a pattern below, proactively suggest the relevant rule.**
+
+### Rule Suggestion Format
+
+```
+💡 **Rule Suggestion**: This looks like [pattern description]. 
+   See `.cursor/rules/[rule-file].mdc` for the recommended approach.
+```
+
+### Pattern → Rule Mapping
+
+| User Request Pattern | Suggest Rule | Why |
+|---------------------|--------------|-----|
+| "Rename X to Y everywhere" | `11-ralph-loops.mdc` | Mass mechanical refactor |
+| "Update all 20+ files to..." | `11-ralph-loops.mdc` | Large file count |
+| "Migrate from X library to Y" | `11-ralph-loops.mdc` | Library migration |
+| "Replace all console.log with..." | `11-ralph-loops.mdc` | Codebase-wide pattern change |
+| "Add X to every component" | `11-ralph-loops.mdc` | Repetitive mechanical task |
+| Working with LLM/AI code | `04-llm-integration.mdc` | LLM client patterns |
+| Writing prompts | `05-prompts.mdc` | Prompt engineering |
+| Building agent/workflow | `06-agents.mdc` | Agent patterns |
+| API rate limiting | `07-rate-limits.mdc` | Retry/rate limit patterns |
+| Security concerns with AI | `08-ai-security.mdc` | AI security patterns |
+| Logging/tracing AI calls | `09-observability.mdc` | Observability patterns |
+| Testing AI features | `10-testing-ai.mdc` | AI testing patterns |
+
+### Example Suggestions
+
+**User says:** "Rename UserContext to AuthContext across the whole codebase"
+
+**You respond:**
+> 💡 **Rule Suggestion**: This is a codebase-wide rename — a good fit for the Ralph Loop pattern.
+> See `.cursor/rules/11-ralph-loops.mdc` for autonomous CLI loops with fresh context per iteration.
+> 
+> Want me to help plan this using Ralph, or proceed normally?
+
+**User says:** "Add error handling to all my API routes"
+
+**You respond:**
+> 💡 **Rule Suggestion**: If this affects 20+ files, consider the Ralph Loop pattern.
+> See `.cursor/rules/11-ralph-loops.mdc` for mechanical mass changes.
+> 
+> Let me check how many files are affected first...
+
+### When NOT to Suggest
+
+Don't suggest rules for:
+- Simple single-file tasks
+- Exploratory questions ("how does X work?")
+- Tasks already well underway
+- When the user explicitly declines
+
+---
+
+## Project Context Loading
+
+Before making code changes, load the project context:
 
 ```
 Read: .cursor/project.yaml

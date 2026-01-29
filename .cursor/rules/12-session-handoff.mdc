@@ -5,37 +5,60 @@ alwaysApply: true
 
 # Session Health & Handoff
 
-Monitor session health and provide smooth transitions to fresh chats when needed.
+Monitor session health and **proactively alert** the user when a fresh chat would help.
 
-## Session Health Indicators
+## IMPORTANT: Automatic Health Checks
 
-**Watch for these signals that suggest starting a fresh chat:**
+**After every response, internally check these conditions. If ANY 🔴 condition is true, IMMEDIATELY show the Session Alert below.**
 
-| Signal | Threshold | Severity |
-|--------|-----------|----------|
-| Repeated same errors | 3+ identical failures | 🔴 High |
-| Conflicting changes | Undoing previous edits | 🔴 High |
-| Context confusion | Mixing up file names/locations | 🔴 High |
-| Scope creep | Task expanded significantly from original | 🟡 Medium |
-| Long conversation | 20+ back-and-forth exchanges | 🟡 Medium |
-| Multiple unrelated tasks | Jumping between 3+ different features | 🟡 Medium |
-| Circular discussions | Revisiting decided topics | 🟡 Medium |
+### 🔴 Critical — Alert Immediately
 
-## When to Suggest Fresh Start
+| Condition | How to Detect |
+|-----------|---------------|
+| Same error 3+ times | You've attempted the same fix pattern 3 times without success |
+| Undoing your own work | You're reverting changes you made earlier in this session |
+| File/name confusion | You referred to wrong file name, confused two components, or forgot earlier context |
+| Lost track of changes | You can't confidently list what files were modified this session |
 
-**Proactively suggest a new chat when:**
+### 🟡 Warning — Mention at Natural Breakpoints
 
-1. **Error loops**: Same error persists after 3 genuine fix attempts
-2. **Context degradation**: You notice confusion about what was already done
-3. **Task drift**: The current task has evolved far from the original request
-4. **Checkpoint reached**: A major milestone is complete, new phase beginning
+| Condition | How to Detect |
+|-----------|---------------|
+| Task completed | Original request is done, user is asking about something new |
+| Scope expanded 3x+ | Task grew from "fix button" to "refactor entire component system" |
+| 3+ unrelated tasks | Session covered authentication, then styling, then database, etc. |
+| Same file edited 5+ times | You keep returning to edit the same file repeatedly |
 
-**Suggest it like this:**
+## Session Alert Format
 
-> "We've made good progress on [summary]. I'm noticing [signal]. 
-> A fresh chat would give us clean context for the next phase.
-> 
-> Here's a handoff command to continue:"
+**When a 🔴 condition is detected, show this alert:**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  ⚠️  SESSION HEALTH CHECK                               │
+├─────────────────────────────────────────────────────────┤
+│  Signal detected: [what you noticed]                    │
+│  Recommendation: Start a fresh chat                     │
+│                                                         │
+│  Say "generate handoff" to get a resume command,        │
+│  or continue if you prefer.                             │
+└─────────────────────────────────────────────────────────┘
+```
+
+**For 🟡 conditions, use a softer mention:**
+
+> "We've completed [task]. This is a good checkpoint — let me know if you'd like a handoff to continue in a fresh chat, or we can keep going."
+
+## Self-Assessment Checklist
+
+Before responding to complex requests, quickly self-check:
+
+- [ ] Do I remember what files I've modified this session?
+- [ ] Am I confident about the current state of the code?
+- [ ] Is this the same task we started with, or has it evolved?
+- [ ] Have I been going in circles on any issue?
+
+If you answer "no" or "unsure" to any of these, surface it to the user.
 
 ## Handoff Command Format
 

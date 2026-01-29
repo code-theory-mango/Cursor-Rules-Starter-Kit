@@ -103,6 +103,36 @@ Your rules and examples here...
 
 ---
 
+## Smart Rule Suggestions
+
+> "I see you're doing X — here's the rule for that."
+
+The AI **proactively suggests relevant rules** based on your request. You'll see:
+
+```
+💡 Rule Suggestion: This is a codebase-wide rename — a good fit for the Ralph Loop pattern.
+   See `.cursor/rules/11-ralph-loops.mdc` for autonomous CLI loops with fresh context.
+   
+   Want me to help plan this using Ralph, or proceed normally?
+```
+
+### When Suggestions Appear
+
+| Your Request | Suggested Rule |
+|--------------|----------------|
+| "Rename X to Y everywhere" | `11-ralph-loops.mdc` (mass refactor) |
+| "Migrate from library X to Y" | `11-ralph-loops.mdc` (migration) |
+| "Update all 50 components to..." | `11-ralph-loops.mdc` (large file count) |
+| Working with LLM/AI code | `04-llm-integration.mdc` |
+| Writing prompts | `05-prompts.mdc` |
+| Building agents | `06-agents.mdc` |
+| Rate limiting | `07-rate-limits.mdc` |
+| AI security concerns | `08-ai-security.mdc` |
+
+You can follow the suggestion or decline — it's informational, not mandatory.
+
+---
+
 ## Project Context System
 
 > "Edit one file, and every rule knows your stack."
@@ -164,22 +194,33 @@ The rules stay generic—the context makes them specific.
 
 > "Know when to start fresh, and pick up exactly where you left off."
 
-Long chat sessions degrade in quality. The **session handoff system** helps you:
+Long chat sessions degrade in quality. The **session handoff system** automatically monitors for problems and alerts you.
 
-1. **Recognize** when a fresh chat would help
-2. **Generate** a handoff command to continue seamlessly
+### Automatic Health Alerts
+
+The AI checks for warning signs after each response. When critical issues are detected, you'll see:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  ⚠️  SESSION HEALTH CHECK                               │
+├─────────────────────────────────────────────────────────┤
+│  Signal detected: Same error attempted 3 times         │
+│  Recommendation: Start a fresh chat                     │
+│                                                         │
+│  Say "generate handoff" to get a resume command,        │
+│  or continue if you prefer.                             │
+└─────────────────────────────────────────────────────────┘
+```
 
 ### Warning Signs
 
-The AI will suggest a new chat when it detects:
-
-| Signal | What It Looks Like |
-|--------|-------------------|
-| 🔴 Error loops | Same error 3+ times despite fixes |
-| 🔴 Context confusion | Mixing up files, forgetting decisions |
-| 🔴 Conflicting changes | Undoing previous edits |
-| 🟡 Scope creep | Task expanded way beyond original |
-| 🟡 Long conversation | 20+ exchanges |
+| Severity | Signal | What It Looks Like |
+|----------|--------|-------------------|
+| 🔴 Critical | Error loops | Same error 3+ times despite fixes |
+| 🔴 Critical | Context confusion | Mixing up files, forgetting decisions |
+| 🔴 Critical | Undoing work | Reverting changes made earlier |
+| 🟡 Warning | Scope creep | Task expanded way beyond original |
+| 🟡 Warning | Task complete | Original goal done, moving to new work |
 
 ### Handoff Command
 
@@ -398,3 +439,91 @@ const MAX_DEPTH = 6;
 - [ ] Script exists at `scripts/generate-tree.js`
 - [ ] `npm run tree` script added to package.json
 - [ ] Run from project root directory
+
+---
+
+## Changelog
+
+### v2.0 — Dynamic Context & Session Management
+
+Major update adding intelligent session handling and project-aware rules.
+
+#### New Features
+
+| Feature | Files | Description |
+|---------|-------|-------------|
+| **Smart Rule Suggestions** | `00-project-context.mdc` | AI suggests relevant rules based on your request |
+| **Project Context System** | `project.yaml`, `00-project-context.mdc` | Define project variables once, all rules adapt automatically |
+| **Session Health Alerts** | `12-session-handoff.mdc` | AI monitors for problems (error loops, confusion) and alerts you |
+| **Session Handoff** | `12-session-handoff.mdc` | Generate resume commands to continue work in fresh chats |
+| **Ralph Loop Pattern** | `11-ralph-loops.mdc`, `ralph-loop.sh` | Autonomous agent loops for large-scale mechanical refactors |
+
+#### Smart Rule Suggestions
+
+**Problem:** You have 12+ rule files but don't always remember which applies when.
+
+**Solution:** The AI recognizes patterns in your request and suggests the relevant rule:
+
+```
+💡 Rule Suggestion: This looks like a codebase-wide rename.
+   See `.cursor/rules/11-ralph-loops.mdc` for the recommended approach.
+```
+
+The suggestion includes:
+- What pattern was detected
+- Which rule file to reference
+- Option to proceed or decline
+
+#### Project Context System
+
+**Problem:** Rules are generic. Every new project requires editing multiple rule files.
+
+**Solution:** A single `project.yaml` file holds all project-specific config:
+
+```yaml
+stack:
+  framework: "Next.js"
+  styling: "Tailwind"
+conventions:
+  components: "PascalCase"
+```
+
+The AI reads this at session start and adapts all rules accordingly. Copy the rules to a new project, update `project.yaml`, done.
+
+#### Session Health & Handoff
+
+**Problem:** Long chat sessions degrade. The AI loses track, repeats mistakes, forgets context.
+
+**Solution:** Automatic health monitoring with two components:
+
+1. **Health Alerts** — AI checks for warning signs after each response:
+   - 🔴 Same error 3+ times
+   - 🔴 Undoing its own work
+   - 🔴 File/name confusion
+   - 🟡 Task complete, scope creep
+
+2. **Handoff Commands** — When starting fresh, say "generate handoff" to get:
+   - What was completed
+   - Files modified
+   - Next steps
+   - A resume command to paste in the new chat
+
+#### Ralph Loop Pattern
+
+**Problem:** Large mechanical refactors (50+ files) exhaust context windows and accumulate errors.
+
+**Solution:** External CLI loops with fresh context per iteration:
+
+1. Plan the transformation in Cursor (Plan Mode)
+2. Generate a bash script with verification commands
+3. Run externally — each iteration gets clean context
+4. External verification (grep, tsc) decides completion, not the LLM
+
+Best for: mass renames, library migrations, pattern replacements across codebase.
+
+### v1.0 — Initial Release
+
+- Core rule templates (01-10)
+- Glob-based rule loading
+- Project tree generator
+- README documentation
